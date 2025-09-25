@@ -4,8 +4,9 @@ import reflex as rx
 import pandas as pd
 from typing import List
 from utils import suggest
+from preprocessing import clean_docs
 
-corpus = list(pd.read_csv("emails_clean_last.csv")["clean"])
+corpus = list(clean_docs("emails.csv")["clean"])
 
 if not corpus:
     print("Ошибка: корпус данных пуст!")

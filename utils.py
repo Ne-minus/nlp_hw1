@@ -182,3 +182,42 @@ def suggest(text: str, n_words: int = 3, n: int = 2, topk: int = 1, corpus = Non
     
     suggestions = ts.suggest_text(text, n_words=n_words, n_texts=min(1, topk))
     return [" ".join(s) for s in suggestions]
+
+if __name__ == "__main__":
+    vocabulary = ['aa', 'aaa', 'abb', 'bba', 'bbb', 'bcd']
+    prefix_tree = PrefixTree(vocabulary)
+    
+    assert set(prefix_tree.search_prefix('a')) == set(['aa', 'aaa', 'abb'])
+    assert set(prefix_tree.search_prefix('bb')) == set(['bba', 'bbb'])
+
+
+    dummy_corpus = [
+    ["aa", "ab"],
+    ["aaa", "abab"],
+    ["abb", "aa", "ab", "bba", "bbb", "bcd"],
+]
+    
+    word_completor = WordCompletor(dummy_corpus)
+    words, probs = word_completor.get_words_and_probs('a')
+    words_probs = list(zip(words, probs))
+    assert set(words_probs) == {('aa', 0.2), ('ab', 0.2), ('aaa', 0.1), ('abab', 0.1), ('abb', 0.1)}
+
+
+    dummy_corpus = [
+    ['aa', 'aa', 'aa', 'aa', 'ab'],
+    ['aaa', 'abab'],
+    ['abb', 'aa', 'ab', 'bba', 'bbb', 'bcd']
+]    
+    n_gram_model = NGramLanguageModel(corpus=dummy_corpus, n=2)
+
+    next_words, probs = n_gram_model.get_next_words_and_probs(['aa', 'aa'])
+    words_probs = list(zip(next_words, probs))
+    
+    assert set(words_probs) == {('aa', 2/3), ('ab', 1/3)}
+
+    word_completor = WordCompletor(dummy_corpus)
+    n_gram_model = NGramLanguageModel(corpus=dummy_corpus, n=2)
+    text_suggestion = TextSuggestion(word_completor, n_gram_model)
+    
+    assert text_suggestion.suggest_text(['aa', 'aa'], n_words=3, n_texts=1) == [['aa', 'aa', 'aa', 'aa']]
+    assert text_suggestion.suggest_text(['abb', 'aa', 'ab'], n_words=2, n_texts=1) == [['ab', 'bba', 'bbb']]
